@@ -1,60 +1,97 @@
-﻿var SignalrConnection;
-var ChatProxy;
+﻿
+
+//var SignalrConnection;
+//var ChatProxy;
+var connection;
+var hub;
+
 
 
 $(document).ready(function () {
     var ip = location.hostname;
-    
-
-    ChatServerUrl = "http://192.168.2.53:8080/";
-
-    //ChatServerUrl = "http://" + "192.168.2.53" + ":8080/";
+    ChatServerUrl = "http://" + ip + ":8080/";
     var ChatUrl = ChatServerUrl + "signalr";
 
-
-
-
-    //This will hold the connection to the signalr hub
-    SignalrConnection = $.hubConnection(ChatUrl, {
+    $.connection.hub.url = ChatUrl;
+    
+    $.connection.hub.useDefaultPath = false;
+    connection = $.hubConnection(ChatUrl, {
         useDefaultPath: false
     });
-    //ChatProxy = SignalrConnection.createHubProxy('WebServiceHub');
+    hub = connection.createHubProxy('WebServiceHub');
+    chat = $.connection.WebServiceHub;
 
-    ChatProxy = SignalrConnection.createHubProxy('WebServiceHub');
-    //This will be called by signalr   
-    ChatProxy.on("ReceiveData", function (message) {
+    
 
+
+    connection.logging = true;
+    connection.start().done(function () {
+        //console.log('Now connected, connection ID=' + connection.id);
+        RequestData();
+
+    })
+        .fail(function (a) {
+            console.log('Could not connect' + a);
+        });
+
+
+    hub.on('RecieveData', function (message) {
         BuildData(message);
-        //$('span').text(message);  
-        //console.log(message);
-        
     });
 
+    ////This will hold the connection to the signalr hub
+    //SignalrConnection = $.hubConnection(ChatUrl, {
+    //    useDefaultPath: false
+    //});
+    //SignalrConnection.logging = true;
+    ////ChatProxy = SignalrConnection.createHubProxy('WebServiceHub');
 
-    //connecting the client to the signalr hub   
-    SignalrConnection.start().done(function () {
-        //alert("Connected to Signalr Server");
-    })
-        .fail(function () {
-            alert("failed in connecting to Digital_Indicator Server");
-        })
+    //ChatProxy = SignalrConnection.createHubProxy('WebServiceHub');
+    ////This will be called by signalr   
+    //ChatProxy.on("receiveData", function (message) {
+
+    //    BuildData(message);
+    //    //$('span').text(message);  
+    //    //console.log(message);
+        
+    //});
+
+    
+    ////connecting the client to the signalr hub   
+    //SignalrConnection.start().done(function () {
+    //    //alert("Connected to Signalr Server");
+    //    RequestData();
+    //})
+    //    .fail(function () {
+    //        alert("failed in connecting to Digital_Indicator Server");
+    //    })
 
 });
 
-function BuildData(message) {
+function RequestData() {
+
     
+    hub.invoke('Send', connection.id, "");
+}
+
+
+
+
+function BuildData(message) {
 
     for (var i = 0; i < message.length; i++) {
         var obj = document.getElementById(message[i].Key)
+        var newObj = obj.cloneNode(false);
 
-        if (obj.innerHTML !== message[i].Value) {
-            obj.innerHTML = message[i].Value;
+        if (newObj.innerHTML !== message[i].Value) {
+        newObj.innerHTML = message[i].Value;
         }
 
-        // $('#' + message[i].Key).text(message[i].Value);
-        //console.log(message[i].Key);
-        //Do something
+        //replace is more efficent
+        obj.parentNode.replaceChild(newObj, obj);
     }
+    setTimeout(function () { RequestData(); }, 50);
+    
 
 }
 
