@@ -43,6 +43,7 @@
     <Compile Include="public\javascripts\materialize.js">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="public\javascripts\plotly.min.js" />
     <Compile Include="routes\index.js" />
     <Compile Include="routes\users.js" />
     <Content Include="package.json" />

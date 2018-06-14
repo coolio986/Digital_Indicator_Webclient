@@ -6,6 +6,15 @@ var connection;
 var hub;
 
 
+$(window).resize(function () {
+    var update = {
+        width: window.innerWidth,  // or any new width
+        
+    }
+    Plotly.relayout('plotDiv', update);
+
+});
+
 
 $(document).ready(function () {
     var ip = location.hostname;
@@ -39,32 +48,40 @@ $(document).ready(function () {
         BuildData(message);
     });
 
-    ////This will hold the connection to the signalr hub
-    //SignalrConnection = $.hubConnection(ChatUrl, {
-    //    useDefaultPath: false
-    //});
-    //SignalrConnection.logging = true;
-    ////ChatProxy = SignalrConnection.createHubProxy('WebServiceHub');
+    Plotly.plot('plotDiv', [{
+        x: [],
+        y: [],
+        mode: 'lines',
+        marker: { color: '#0099ff', size: 8 },
+        line: { width: 2 },
+        name: 'Actual Diameter'
+        },
+        {
+            x: [],
+            y: [],
+            mode: 'lines',
+            marker: { color: 'red', size: 2 },
+            line: { width: 2 },
+            name: 'Upper Limit'
+        },
+        {
+            x: [],
+            y: [],
+            mode: 'lines',
+            marker: { color: 'red', size: 2 },
+            line: { width: 2 },
+            name: 'Lower Limit'
+        },
+        {
+            x: [],
+            y: [],
+            mode: 'lines',
+            marker: { color: 'limegreen', size: 2 },
+            line: { width: 2 },
+            name: 'Nominal Diameter'
+        }
 
-    //ChatProxy = SignalrConnection.createHubProxy('WebServiceHub');
-    ////This will be called by signalr   
-    //ChatProxy.on("receiveData", function (message) {
-
-    //    BuildData(message);
-    //    //$('span').text(message);  
-    //    //console.log(message);
-        
-    //});
-
-    
-    ////connecting the client to the signalr hub   
-    //SignalrConnection.start().done(function () {
-    //    //alert("Connected to Signalr Server");
-    //    RequestData();
-    //})
-    //    .fail(function () {
-    //        alert("failed in connecting to Digital_Indicator Server");
-    //    })
+    ]);
 
 });
 
@@ -83,6 +100,10 @@ function BuildData(message) {
         var obj = document.getElementById(message[i].Key)
         var newObj = obj.cloneNode(false);
 
+        if (message[i].Key == "ActualDiameter") {
+            AddPlotData(message[i].Value);
+        }
+
         if (newObj.innerHTML !== message[i].Value) {
         newObj.innerHTML = message[i].Value;
         }
@@ -93,5 +114,18 @@ function BuildData(message) {
     setTimeout(function () { RequestData(); }, 50);
     
 
+}
+
+function AddPlotData(y) {
+    Plotly.extendTraces('plotDiv', {
+        x: [[new Date().getTime() / 1000], [new Date().getTime() / 1000], [new Date().getTime() / 1000], [new Date().getTime() / 1000]  ],
+        y: [[y], [1.80], [1.70], [1.75]]
+    }, [0, 1, 2, 3], 200)
+
+    
+}
+
+function rand() {
+    return Math.random();
 }
 
