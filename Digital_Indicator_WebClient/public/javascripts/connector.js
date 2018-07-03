@@ -4,12 +4,15 @@
 //var ChatProxy;
 var connection;
 var hub;
+var upperLimit;
+var lowerLimit;
+var nominalDiameter;
 
 
 $(window).resize(function () {
     var update = {
         width: window.innerWidth,  // or any new width
-        
+
     }
     Plotly.relayout('plotDiv', update);
 
@@ -22,7 +25,7 @@ $(document).ready(function () {
     var ChatUrl = ChatServerUrl + "signalr";
 
     $.connection.hub.url = ChatUrl;
-    
+
     $.connection.hub.useDefaultPath = false;
     connection = $.hubConnection(ChatUrl, {
         useDefaultPath: false
@@ -30,7 +33,7 @@ $(document).ready(function () {
     hub = connection.createHubProxy('WebServiceHub');
     chat = $.connection.WebServiceHub;
 
-    
+
 
 
     connection.logging = true;
@@ -55,31 +58,31 @@ $(document).ready(function () {
         marker: { color: '#0099ff', size: 8 },
         line: { width: 2 },
         name: 'Actual Diameter'
-        },
-        {
-            x: [],
-            y: [],
-            mode: 'lines',
-            marker: { color: 'red', size: 2 },
-            line: { width: 2 },
-            name: 'Upper Limit'
-        },
-        {
-            x: [],
-            y: [],
-            mode: 'lines',
-            marker: { color: 'red', size: 2 },
-            line: { width: 2 },
-            name: 'Lower Limit'
-        },
-        {
-            x: [],
-            y: [],
-            mode: 'lines',
-            marker: { color: 'limegreen', size: 2 },
-            line: { width: 2 },
-            name: 'Nominal Diameter'
-        }
+    },
+    {
+        x: [],
+        y: [],
+        mode: 'lines',
+        marker: { color: 'red', size: 2 },
+        line: { width: 2 },
+        name: 'Upper Limit'
+    },
+    {
+        x: [],
+        y: [],
+        mode: 'lines',
+        marker: { color: 'red', size: 2 },
+        line: { width: 2 },
+        name: 'Lower Limit'
+    },
+    {
+        x: [],
+        y: [],
+        mode: 'lines',
+        marker: { color: 'limegreen', size: 2 },
+        line: { width: 2 },
+        name: 'Nominal Diameter'
+    }
 
     ]);
 
@@ -87,7 +90,7 @@ $(document).ready(function () {
 
 function RequestData() {
 
-    
+
     hub.invoke('Send', connection.id, "");
 }
 
@@ -97,32 +100,51 @@ function RequestData() {
 function BuildData(message) {
 
     for (var i = 0; i < message.length; i++) {
-        var obj = document.getElementById(message[i].Key)
-        var newObj = obj.cloneNode(false);
+        try {
+            var obj = document.getElementById(message[i].Key)
+            var newObj = obj.cloneNode(false);
 
-        if (message[i].Key == "ActualDiameter") {
-            AddPlotData(message[i].Value);
+            if (message[i].Key == "ActualDiameter") {
+                AddPlotData(message[i].Value);
+            }
+
+            if (newObj.innerHTML !== message[i].Value) {
+                newObj.innerHTML = message[i].Value;
+            }
+
+            //replace is more efficent
+            obj.parentNode.replaceChild(newObj, obj);
         }
+        //if item is not part of the DOM the try alternate method
+        catch {
+            switch (message[i].Key) {
+                case "UpperLimit":
+                    upperLimit = message[i].Value;
+                    break;
+                case "LowerLimit":
+                    lowerLimit = message[i].Value;
+                    break;
+                case "NominalDiameter":
+                    nominalDiameter = message[i].Value;
+                    break;
+                default:
+                    break;
+            }
 
-        if (newObj.innerHTML !== message[i].Value) {
-        newObj.innerHTML = message[i].Value;
         }
-
-        //replace is more efficent
-        obj.parentNode.replaceChild(newObj, obj);
     }
     setTimeout(function () { RequestData(); }, 50);
-    
+
 
 }
 
 function AddPlotData(y) {
     Plotly.extendTraces('plotDiv', {
-        x: [[new Date().getTime() / 1000], [new Date().getTime() / 1000], [new Date().getTime() / 1000], [new Date().getTime() / 1000]  ],
-        y: [[y], [1.80], [1.70], [1.75]]
+        x: [[new Date().getTime() / 1000], [new Date().getTime() / 1000], [new Date().getTime() / 1000], [new Date().getTime() / 1000]],
+        y: [[y], [upperLimit], [lowerLimit], [nominalDiameter]]
     }, [0, 1, 2, 3], 200)
 
-    
+
 }
 
 function rand() {
