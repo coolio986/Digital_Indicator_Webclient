@@ -67,6 +67,38 @@ app.use(function (err, req, res, next) {
 
 app.set('port', process.env.PORT || 3000);
 
-var server = app.listen(app.get('port'), function () {
+var server = app.listen(app.get('port'), '0.0.0.0', function () {
     debug('Express server listening on port ' + server.address().port);
+    console.log('\r\nWeb server ready and listening on: ');
+
+    for (var i = 0; i < ipaddresses.length; i++){
+        console.log(ipaddresses[i] + ':' + server.address().port);
+    }
+    console.log('\r\n');
+});
+
+var os = require('os');
+var ifaces = os.networkInterfaces();
+var ipaddresses = [];
+
+Object.keys(ifaces).forEach(function (ifname) {
+    var alias = 0;
+
+    ifaces[ifname].forEach(function (iface) {
+        if ('IPv4' !== iface.family || iface.internal !== false) {
+            // skip over internal (i.e. 127.0.0.1) and non-ipv4 addresses
+            return;
+        }
+
+        if (alias >= 1) {
+            // this single interface has multiple ipv4 addresses
+            //console.log(iface.address);
+            ipaddresses.push(iface.address);
+        } else {
+            // this interface has only one ipv4 adress
+            //console.log(iface.address);
+            ipaddresses.push(iface.address);
+        }
+        ++alias;
+    });
 });

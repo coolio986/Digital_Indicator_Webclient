@@ -139,15 +139,26 @@ function BuildData(message) {
 }
 
 function AddPlotData(y) {
+    var time = new Date();
+    
+
     Plotly.extendTraces('plotDiv', {
-        x: [[new Date().getTime() / 1000], [new Date().getTime() / 1000], [new Date().getTime() / 1000], [new Date().getTime() / 1000]],
+        x: [[time], [time], [time], [time]],
         y: [[y], [upperLimit], [lowerLimit], [nominalDiameter]]
     }, [0, 1, 2, 3], 200)
 
-
+    //Math.floor(new Date().getTime() / 1000)
 }
 
 function rand() {
     return Math.random();
+}
+
+function sanatizeTime(time) {
+    if (time < 10) {
+        return "0" + time;
+    }
+
+    return time;
 }
 
